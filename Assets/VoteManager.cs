@@ -1,60 +1,88 @@
 using UnityEngine;
+using System.IO;
 using UnityEngine.SceneManagement;
+
+[System.Serializable]
+public class VoteData
+{
+    public int candidate1Votes;
+    public int candidate2Votes;
+    public int candidate3Votes;
+    public int candidate4Votes;
+}
 
 public class VoteManager : MonoBehaviour
 {
-    // Variables to track votes for each candidate
-    public string sceneName;
     public int candidate1Votes = 0;
     public int candidate2Votes = 0;
     public int candidate3Votes = 0;
     public int candidate4Votes = 0;
+    public string sceneName;
 
-    // Function to update vote count for candidate 1
+    private string filePath;
+
+    void Start()
+    {
+        filePath = Path.Combine(Application.persistentDataPath, "VoteData.json");
+        LoadVoteData();  // Load existing data at start
+    }
+
     public void VoteForCandidate1()
     {
         candidate1Votes++;
         SaveVoteData();
     }
 
-    // Function to update vote count for candidate 2
     public void VoteForCandidate2()
     {
         candidate2Votes++;
         SaveVoteData();
     }
 
-    // Function to update vote count for candidate 3
     public void VoteForCandidate3()
     {
         candidate3Votes++;
         SaveVoteData();
     }
 
-    // Function to update vote count for candidate 4
     public void VoteForCandidate4()
     {
         candidate4Votes++;
         SaveVoteData();
     }
 
-    // Save all vote data to PlayerPrefs
-    void SaveVoteData()
+    // Save data to JSON file
+    private void SaveVoteData()
     {
-        PlayerPrefs.SetInt("Candidate1Votes", candidate1Votes);
-        PlayerPrefs.SetInt("Candidate2Votes", candidate2Votes);
-        PlayerPrefs.SetInt("Candidate3Votes", candidate3Votes);
-        PlayerPrefs.SetInt("Candidate4Votes", candidate4Votes);
-        PlayerPrefs.Save();
+        VoteData data = new VoteData
+        {
+            candidate1Votes = candidate1Votes,
+            candidate2Votes = candidate2Votes,
+            candidate3Votes = candidate3Votes,
+            candidate4Votes = candidate4Votes
+        };
+
+        string json = JsonUtility.ToJson(data, true);
+        File.WriteAllText(filePath, json);
         SceneManager.LoadScene(sceneName);
     }
 
-    // Load existing vote data from PlayerPrefs
-    public void LoadVoteData()
+    // Load data from JSON file
+    private void LoadVoteData()
     {
-        candidate1Votes = PlayerPrefs.GetInt("Candidate1Votes", 0);
-        candidate2Votes = PlayerPrefs.GetInt("Candidate2Votes", 0);
-        candidate3Votes = PlayerPrefs.GetInt("Candidate3Votes", 0);
-        candidate4Votes = PlayerPrefs.GetInt("Candidate4Votes", 0);
+        if (File.Exists(filePath))
+        {
+            string json = File.ReadAllText(filePath);
+            VoteData data = JsonUtility.FromJson<VoteData>(json);
+
+            candidate1Votes = data.candidate1Votes;
+            candidate2Votes = data.candidate2Votes;
+            candidate3Votes = data.candidate3Votes;
+            candidate4Votes = data.candidate4Votes;
+        }
+        else
+        {
+            Debug.Log("No save file found. Starting fresh.");
+        }
     }
 }
